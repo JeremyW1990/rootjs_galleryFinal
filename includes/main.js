@@ -2,22 +2,7 @@
 
 $(document).ready(initiateApp);
 
-var pictures = [
-	'images/landscape-1.jpg',
-	'images/landscape-10.jpg',
-	'images/landscape-11.jpg',
-	'images/landscape-13.jpg',
-	'images/landscape-15.jpg',
-	'images/landscape-17.jpg',
-	'images/landscape-18.jpg',
-	'images/landscape-19.jpg',
-	'images/landscape-2.jpg',
-	'images/landscape-3.jpg',
-	'images/landscape-8.jpg',
-	'images/landscape-9.jpg',
-	'images/pexels-photo-132037.jpeg',
-	'images/pretty.jpg',
-];
+var pictures = [];
 
 var pictureElements = [];
 
@@ -25,11 +10,84 @@ function initiateApp(){
 	/*advanced: add jquery sortable call here to make the gallery able to be sorted
 		//on change, rebuild the images array into the new order
 	*/
+
+	retrievePicturesFromLocalStorage();
+	
 	$('button').click(function() {
 		$("#galleryModal").modal();
 	});
+
 	makeGallery(pictures);
 	addModalCloseHandler();
+	imageDragDetection();
+}
+
+function retrievePicturesFromLocalStorage () {
+	if (localStorage.getItem("pictures") === null) {
+		pictures = [
+			'images/landscape-1.jpg',
+			'images/landscape-10.jpg',
+			'images/landscape-11.jpg',
+			'images/landscape-13.jpg',
+			'images/landscape-15.jpg',
+			'images/landscape-17.jpg',
+			'images/landscape-18.jpg',
+			'images/landscape-19.jpg',
+			'images/landscape-2.jpg',
+			'images/landscape-3.jpg',
+			'images/landscape-8.jpg',
+			'images/landscape-9.jpg',
+			'images/pexels-photo-132037.jpeg',
+			'images/pretty.jpg',
+		];
+	} else {
+		pictures = localStorage.getItem('pictures').split(',');
+		console.log(pictures);
+		
+	}
+}
+
+function updatePicturesToLocalStorage(updatedPictures) {
+	localStorage.setItem("pictures", updatedPictures)
+	console.log(updatedPictures);
+}
+
+function iamgeArrayUpdate() {
+	var newPictures = [];
+	for (var figcaptionEle of $('figcaption')) {
+		newPictures.push("images/" + figcaptionEle.innerText);
+		console.log(figcaptionEle.innerText);
+	};
+	updatePicturesToLocalStorage(newPictures);
+}
+function imageDragDetection() {
+	var isDragging = false;
+	var isMouseDown = false;
+	$("#gallery").on({
+		mousedown: function() {
+			console.log('mouse down');
+			isMouseDown = true;
+		},
+		mousemove: function() {
+			console.log('mouse moving');
+			if (isMouseDown) {
+				isDragging = true;
+			}
+		}, 
+		mouseup: function() {
+			console.log('mouse up');
+			if (isDragging) {
+				console.log("detected");
+				setTimeout(iamgeArrayUpdate,0)
+				//iamgeArrayUpdate();
+				isDragging = false;
+				isMouseDown = false;			
+			}
+		}
+	});
+	// $("#gallery").bind("DOMSubtreeModified", iamgeArrayUpdate);
+
+
 }
 
 function getImageName(filename) {
@@ -49,11 +107,13 @@ function makeGallery(imageArray){
 		//attach a click handler to the figure you create.  call the "displayImage" function.  
 
 		//append the element to the #gallery section
+	
+	//style="background-image:url(images/landscape-1.jpg);
 
-	for (var index = 0; index < pictures.length; index++) {
+	for (var index = 0; index < imageArray.length; index++) {
 
-		var imageName = getImageName(pictures[index]) ;
-		var imageType = getImageType(pictures[index]);
+		var imageName = getImageName(imageArray[index]) ;
+		var imageType = getImageType(imageArray[index]);
 		var styleString =  "background-image:url(images/" + imageName + "." + imageType + ')';
 
 		var picEle = $('<figure>', {
@@ -64,7 +124,7 @@ function makeGallery(imageArray){
 			})
 		});
 
-		picEle.click(displayImage.bind(this, pictures[index],imageName));
+		picEle.click(displayImage.bind(this, imageArray[index],imageName));
 		picEle.click(function() {
 			$("#galleryModal").modal();
 		});
@@ -72,6 +132,7 @@ function makeGallery(imageArray){
 		$('#gallery').append(picEle);
 	};
 
+	$('#gallery').sortable();	
 }
 
 function addModalCloseHandler(){
